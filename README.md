@@ -35,7 +35,7 @@ Prerequisites
 
 [Python pillow](https://python-pillow.org/)
 
-[svgwrite](https://pypi.org/project/svgwrite/)
+[svgwrite](https://pypi.org/project/svgwrite/) [svgwrite 1.4.1 documentation](https://svgwrite.readthedocs.io/en/latest/)
 
 ### Gentoo Linux
 

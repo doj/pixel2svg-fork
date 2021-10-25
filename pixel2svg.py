@@ -5,6 +5,7 @@
    Copyright 2011 Florian Berger <fberger@florian-berger.de>
    Copyright 2015 Cyrille Chopelet
    Copyright 2020 Ale Rimoldi <ale@graphicslab.org>
+   Copyright 2021 Dirk Jagdmann <doj@cubic.org>
 """
 
 # pixel2svg is free software: you can redistribute it and/or modify
@@ -21,12 +22,19 @@
 # along with pixel2svg.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-
+import sys
 import os.path
+
 from PIL import Image
+
 import svgwrite
+from svgwrite.extensions import Inkscape
 
 VERSION = "0.6.0"
+
+# TODO: better similarity comparison
+def similar_pixel(a, b):
+    return a == b
 
 if __name__ == "__main__":
 
@@ -75,6 +83,9 @@ if __name__ == "__main__":
     svgdoc = svgwrite.Drawing(filename=os.path.splitext(arguments.imagefile)[0] + ".svg",
                               size=("{0}px".format(width * arguments.squaresize),
                                     "{0}px".format(height * arguments.squaresize)))
+    inkscape = Inkscape(svgdoc)
+    top_layer = inkscape.layer(label="Top Layer", locked=True)
+    svgdoc.add(top_layer)
 
     # If --overlap is given, use a slight overlap to prevent inaccurate SVG rendering
     overlap = arguments.overlap
@@ -105,7 +116,7 @@ if __name__ == "__main__":
                 if arguments.combineh:
                     while X+x < width:
                         px = rgb_values[Y * width + X + x]
-                        if px != rgba_tuple:
+                        if not similar_pixel(px, rgba_tuple):
                             break
                         x += 1
                     if x > 1:
@@ -119,11 +130,11 @@ if __name__ == "__main__":
                 rectangle_fill = svgwrite.rgb(rgba_tuple[0], rgba_tuple[1], rgba_tuple[2])
 
                 if alpha == 255:
-                    svgdoc.add(svgdoc.rect(insert=rectangle_posn,
+                    top_layer.add(svgdoc.rect(insert=rectangle_posn,
                                            size=rectangle_size,
                                            fill=rectangle_fill))
                 else:
-                    svgdoc.add(svgdoc.rect(insert=rectangle_posn,
+                    top_layer.add(svgdoc.rect(insert=rectangle_posn,
                                            size=rectangle_size,
                                            fill=rectangle_fill,
                                            opacity=alpha/float(255)))
@@ -136,3 +147,4 @@ if __name__ == "__main__":
     print("Saving SVG to '{0}'".format(svgdoc.filename))
 
     svgdoc.save()
+    sys.exit(0)

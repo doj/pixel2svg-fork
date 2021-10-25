@@ -1,2 +1,1 @@
-- create layer
 - place different colors in different layers
