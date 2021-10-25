@@ -31,14 +31,14 @@ Nice, pure vector data.
 Prerequisites
 -------------
 
-Python 2.x   [http://www.python.org](http://www.python.org)
+[Python 3](https://www.python.org)
 
-Python Imaging Library (PIL) [http://www.pythonware.com/products/pil/](http://www.pythonware.com/products/pil/)
+[Python pillow](https://python-pillow.org/)
 
-svgwrite [http://pypi.python.org/pypi/svgwrite/](http://pypi.python.org/pypi/svgwrite/)
+[svgwrite](https://pypi.org/project/svgwrite/)
 
-Gentoo Linux
-~~~~~~~~~~~~~
+### Gentoo Linux
+
 As of 2021 the dev-python/svgwrite ebuild is masked, you need to add:
 
     >=dev-python/svgwrite-1.4.1 ~amd64
@@ -50,18 +50,10 @@ Then install the 2 python libraries with:
     emerge dev-python/pillow dev-python/svgwrite
 
 
-Installation
-------------
-
-Unzip the file, then at the command line run
-
-    python setup.py install
-
-
 Usage
 -----
 
-    Usage: pixel2svg [--overlap] IMAGEFILE
+    Usage: usage: pixel2svg.py [-h] [--overlap] [--version] [--squaresize SQUARESIZE] [--combineh] imagefile
 
     Options:
       --version             show program's version number and exit
