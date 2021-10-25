@@ -33,7 +33,7 @@ from svgwrite.extensions import Inkscape
 VERSION = "0.6.0"
 
 # TODO: better similarity comparison
-def similar_pixel(a, b):
+def similar_color(a, b):
     return a == b
 
 if __name__ == "__main__":
@@ -119,7 +119,7 @@ if __name__ == "__main__":
                 if arguments.combineh:
                     while X+x < width:
                         px = rgb_values[Y * width + X + x]
-                        if not similar_pixel(px, rgba_tuple):
+                        if not similar_color(px, rgba_tuple):
                             break
                         x += 1
                     if x > 1:

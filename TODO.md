@@ -1,1 +1,2 @@
-- place different colors in different layers
+- combine rectangles vertical
+- implement similar_color
