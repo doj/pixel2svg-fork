@@ -6,7 +6,7 @@ About
 
 pixel2svg converts pixel art to SVG - pixel by pixel.
 
-For example, here is an icon from the [Tango Icon 
+For example, here is an icon from the [Tango Icon
 Set](http://tango.freedesktop.org/):
 
 ![tango heart](http://static.florian-berger.de/tango-heart.png)
@@ -15,8 +15,8 @@ If you scale this up for a nice blocky print, you might get a dithered result:
 
 ![tango heart 400px dithered](http://static.florian-berger.de/tango-heart-400px-dithered.png)
 
-Of course you can turn dithering off. But sometimes you might want a vector 
-file, especially for large prints. For these cases, pixel2svg produces this SVG 
+Of course you can turn dithering off. But sometimes you might want a vector
+file, especially for large prints. For these cases, pixel2svg produces this SVG
 file (try clicking to find out whether your browser supports SVG):
 
 [tango-heart.svg](http://static.florian-berger.de/tango-heart.svg)
@@ -36,6 +36,18 @@ Python 2.x   [http://www.python.org](http://www.python.org)
 Python Imaging Library (PIL) [http://www.pythonware.com/products/pil/](http://www.pythonware.com/products/pil/)
 
 svgwrite [http://pypi.python.org/pypi/svgwrite/](http://pypi.python.org/pypi/svgwrite/)
+
+Gentoo Linux
+~~~~~~~~~~~~~
+As of 2021 the dev-python/svgwrite ebuild is masked, you need to add:
+
+>=dev-python/svgwrite-1.4.1 ~amd64
+
+to /etc/portage/package.accept_keywords
+
+Then install the 2 python libraries with:
+
+# emerge dev-python/pillow dev-python/svgwrite
 
 
 Installation
@@ -64,7 +76,7 @@ Running
 
 will process IMAGE.EXT and create IMAGE.svg.
 
-EXT can be any format (png, jpg etc.) that can be read by the Python Imaging 
+EXT can be any format (png, jpg etc.) that can be read by the Python Imaging
 Library.
 
 
