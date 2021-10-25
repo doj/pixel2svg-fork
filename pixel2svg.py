@@ -23,7 +23,7 @@
 import argparse
 
 import os.path
-import PIL.Image
+from PIL import Image
 import svgwrite
 
 VERSION = "0.5.0"
@@ -37,6 +37,7 @@ if __name__ == "__main__":
 
     argument_parser.add_argument("--overlap",
                                  action="store_true",
+                                 default=0,
                                  help="If given, overlap vector squares by 1px")
 
     argument_parser.add_argument("--version",
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     print("pixel2svg {0}".format(VERSION))
     print("Reading image file '{0}'".format(arguments.imagefile))
 
-    image = PIL.Image.open(arguments.imagefile)
+    image = Image.open(arguments.imagefile)
 
     print("Converting image to RGBA")
 
