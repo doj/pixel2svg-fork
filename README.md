@@ -41,13 +41,13 @@ Gentoo Linux
 ~~~~~~~~~~~~~
 As of 2021 the dev-python/svgwrite ebuild is masked, you need to add:
 
->=dev-python/svgwrite-1.4.1 ~amd64
+    >=dev-python/svgwrite-1.4.1 ~amd64
 
 to /etc/portage/package.accept_keywords
 
 Then install the 2 python libraries with:
 
-# emerge dev-python/pillow dev-python/svgwrite
+    emerge dev-python/pillow dev-python/svgwrite
 
 
 Installation
@@ -89,4 +89,9 @@ pixel2svg is licensed under the GPL. See the file COPYING for details.
 Author
 ------
 
+original version:
 (c) Florian Berger <fberger@florian-berger.de>
+
+updates by cyChop at https://github.com/cyChop/pixel2svg-fork
+
+updates by Dirk Jagdmann <doj@cubic.org at https://github.com/doj/pixel2svg-fork
