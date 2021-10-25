@@ -26,7 +26,7 @@ import os.path
 from PIL import Image
 import svgwrite
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 if __name__ == "__main__":
 
@@ -37,7 +37,6 @@ if __name__ == "__main__":
 
     argument_parser.add_argument("--overlap",
                                  action="store_true",
-                                 default=0,
                                  help="If given, overlap vector squares by 1px")
 
     argument_parser.add_argument("--version",
@@ -50,6 +49,9 @@ if __name__ == "__main__":
                                  default=40,
                                  help="Width and height of vector squares in pixels, default: 40")
 
+    argument_parser.add_argument("--combineh",
+                                 action="store_true",
+                                 help="If given, combine similar pixels horizontally")
 
     arguments = argument_parser.parse_args()
 
@@ -75,31 +77,47 @@ if __name__ == "__main__":
                                     "{0}px".format(height * arguments.squaresize)))
 
     # If --overlap is given, use a slight overlap to prevent inaccurate SVG rendering
-    rectangle_size = ("{0}px".format(arguments.squaresize + arguments.overlap),
-                      "{0}px".format(arguments.squaresize + arguments.overlap))
+    overlap = arguments.overlap
+    if overlap:
+        overlap = 1
+    else:
+        overlap = 0
+    print("Will use an square overlap of {0}px".format(overlap))
 
-    rowcount = 0
+    rectangle_num = 0
+    Y = 0
+    while Y < height:
 
-    print("Will use an square overlap of {0}px".format(arguments.overlap))
+        #print("Processing pixel row {0} of {1}".format(Y + 1, height))
 
-    while rowcount < height:
+        X = 0
+        while X < width:
 
-        print("Processing pixel row {0} of {1}".format(rowcount + 1, height))
-
-        colcount = 0
-
-        while colcount < width:
-
-            rgb_tuple = rgb_values.pop(0)
+            #rgba_tuple = rgb_values.pop(0)
+            rgba_tuple = rgb_values[Y * width + X]
 
             # Omit transparent pixels
-            if rgb_tuple[3] > 0:
+            x = 1
+            alpha = rgba_tuple[3]
+            if alpha > 0:
 
-                rectangle_posn = ("{0}px".format(colcount * arguments.squaresize),
-                                  "{0}px".format(rowcount * arguments.squaresize))
-                rectangle_fill = svgwrite.rgb(rgb_tuple[0], rgb_tuple[1], rgb_tuple[2])
+                # combine horizontal pixels?
+                if arguments.combineh:
+                    while X+x < width:
+                        px = rgb_values[Y * width + X + x]
+                        if px != rgba_tuple:
+                            break
+                        x += 1
+                    if x > 1:
+                        print("combine {0},{1} {2},{3}".format(X,Y,x,1))
 
-                alpha = rgb_tuple[3];
+                rectangle_num += 1
+                rectangle_posn = ("{0}px".format(X * arguments.squaresize),
+                                  "{0}px".format(Y * arguments.squaresize))
+                rectangle_size = ("{0}px".format(x * arguments.squaresize + overlap),
+                                  "{0}px".format(arguments.squaresize + overlap))
+                rectangle_fill = svgwrite.rgb(rgba_tuple[0], rgba_tuple[1], rgba_tuple[2])
+
                 if alpha == 255:
                     svgdoc.add(svgdoc.rect(insert=rectangle_posn,
                                            size=rectangle_size,
@@ -110,12 +128,11 @@ if __name__ == "__main__":
                                            fill=rectangle_fill,
                                            opacity=alpha/float(255)))
 
-            colcount = colcount + 1
+            X += x
 
-        rowcount = rowcount + 1
+        Y += 1
 
+    print("used {0} rectangles".format(rectangle_num))
     print("Saving SVG to '{0}'".format(svgdoc.filename))
 
     svgdoc.save()
-
-    print("Operation finished. Have fun with your SVG.")
