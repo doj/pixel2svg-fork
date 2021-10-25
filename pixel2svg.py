@@ -84,8 +84,6 @@ if __name__ == "__main__":
                               size=("{0}px".format(width * arguments.squaresize),
                                     "{0}px".format(height * arguments.squaresize)))
     inkscape = Inkscape(svgdoc)
-    top_layer = inkscape.layer(label="Top Layer", locked=True)
-    svgdoc.add(top_layer)
 
     # If --overlap is given, use a slight overlap to prevent inaccurate SVG rendering
     overlap = arguments.overlap
@@ -94,6 +92,11 @@ if __name__ == "__main__":
     else:
         overlap = 0
     print("Will use an square overlap of {0}px".format(overlap))
+
+    # a dictionary of rectangles
+    # key: rgba tuple
+    # value: list of SVG rectangle objects
+    rectangles = {}
 
     rectangle_num = 0
     Y = 0
@@ -128,23 +131,35 @@ if __name__ == "__main__":
                 rectangle_size = ("{0}px".format(x * arguments.squaresize + overlap),
                                   "{0}px".format(arguments.squaresize + overlap))
                 rectangle_fill = svgwrite.rgb(rgba_tuple[0], rgba_tuple[1], rgba_tuple[2])
+                rect = 1
 
                 if alpha == 255:
-                    top_layer.add(svgdoc.rect(insert=rectangle_posn,
-                                           size=rectangle_size,
-                                           fill=rectangle_fill))
+                    rect = svgdoc.rect(insert=rectangle_posn,
+                                       size=rectangle_size,
+                                       fill=rectangle_fill)
                 else:
-                    top_layer.add(svgdoc.rect(insert=rectangle_posn,
-                                           size=rectangle_size,
-                                           fill=rectangle_fill,
-                                           opacity=alpha/float(255)))
+                    rect = svgdoc.rect(insert=rectangle_posn,
+                                       size=rectangle_size,
+                                       fill=rectangle_fill,
+                                       opacity=alpha/float(255))
+
+                rectangles.setdefault(rgba_tuple, []).append(rect)
 
             X += x
 
         Y += 1
 
     print("used {0} rectangles".format(rectangle_num))
+    print("found {0} colors".format(len(rectangles)))
     print("Saving SVG to '{0}'".format(svgdoc.filename))
+
+    layer_num = 0
+    for rgba_tuple in rectangles:
+        layer_num += 1
+        layer = inkscape.layer(label="layer {0}".format(layer_num), locked=True)
+        svgdoc.add(layer)
+        for rect in rectangles[rgba_tuple]:
+            layer.add(rect)
 
     svgdoc.save()
     sys.exit(0)

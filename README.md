@@ -86,4 +86,4 @@ original version:
 
 updates by cyChop at https://github.com/cyChop/pixel2svg-fork
 
-updates by Dirk Jagdmann <doj@cubic.org at https://github.com/doj/pixel2svg-fork
+updates by Dirk Jagdmann <doj@cubic.org> at https://github.com/doj/pixel2svg-fork
