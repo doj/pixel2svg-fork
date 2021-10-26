@@ -32,6 +32,14 @@ from svgwrite.extensions import Inkscape
 
 VERSION = "0.6.0"
 
+# some constants
+RED = 0
+GREEN = 1
+BLUE = 2
+ALPHA = 3
+
+class BreakEx(Exception): pass
+
 # TODO: better similarity comparison
 def similar_color(a, b):
     return a == b
@@ -57,28 +65,23 @@ if __name__ == "__main__":
                                  default=40,
                                  help="Width and height of vector squares in pixels, default: 40")
 
-    argument_parser.add_argument("--combineh",
+    argument_parser.add_argument("--combine",
                                  action="store_true",
-                                 help="If given, combine similar pixels horizontally")
+                                 help="If given, combine similar pixels into larger rectangles")
 
     arguments = argument_parser.parse_args()
 
     print("pixel2svg {0}".format(VERSION))
-    print("Reading image file '{0}'".format(arguments.imagefile))
+    print("read: {0}".format(arguments.imagefile))
 
     image = Image.open(arguments.imagefile)
-
-    print("Converting image to RGBA")
-
     image = image.convert("RGBA")
 
     (width, height) = image.size
 
-    print("Image is {0}x{1}".format(width, height))
+    print("image size: {0}x{1}".format(width, height))
 
     rgb_values = list(image.getdata())
-
-    print("Read {0} pixels".format(len(rgb_values)))
 
     svgdoc = svgwrite.Drawing(filename=os.path.splitext(arguments.imagefile)[0] + ".svg",
                               size=("{0}px".format(width * arguments.squaresize),
@@ -91,7 +94,7 @@ if __name__ == "__main__":
         overlap = 1
     else:
         overlap = 0
-    print("Will use an square overlap of {0}px".format(overlap))
+    print("overlap: {0}px".format(overlap))
 
     # a dictionary of rectangles
     # key: rgba tuple
@@ -112,24 +115,49 @@ if __name__ == "__main__":
 
             # Omit transparent pixels
             x = 1
-            alpha = rgba_tuple[3]
+            alpha = rgba_tuple[ALPHA]
             if alpha > 0:
+                y = 1
 
                 # combine horizontal pixels?
-                if arguments.combineh:
+                if arguments.combine:
                     while X+x < width:
                         px = rgb_values[Y * width + X + x]
                         if not similar_color(px, rgba_tuple):
                             break
                         x += 1
                     if x > 1:
-                        print("combine {0},{1} {2},{3}".format(X,Y,x,1))
+                        # check if pixels below have the same color and can be combined?
+                        try:
+                            while Y+y < height:
+                                # check if the next row of pixels has a similar color
+                                i = 0
+                                while i < x:
+                                    px = rgb_values[(Y+y) * width + X + i]
+                                    if not similar_color(px, rgba_tuple):
+                                        raise BreakEx
+                                    i += 1
+                                # the color is similar.
+                                # set the alpha value of all these pixels to 0, so they will not be processed any more.
+                                i = 0
+                                while i < x:
+                                    # the pixel is a python tuple and constant.
+                                    # create a new tuple with alpha=0 and assign to the pixel array.
+                                    px = rgb_values[(Y+y) * width + X + i]
+                                    rgb_values[(Y+y) * width + X + i] = (px[RED], px[GREEN], px[BLUE], 0)
+                                    i += 1
+
+                                y += 1
+
+                        except BreakEx:
+                            pass
+                        print("combine: {0},{1} {2},{3}".format(X,Y,x,y))
 
                 rectangle_num += 1
                 rectangle_posn = ("{0}px".format(X * arguments.squaresize),
                                   "{0}px".format(Y * arguments.squaresize))
                 rectangle_size = ("{0}px".format(x * arguments.squaresize + overlap),
-                                  "{0}px".format(arguments.squaresize + overlap))
+                                  "{0}px".format(y * arguments.squaresize + overlap))
                 rectangle_fill = svgwrite.rgb(rgba_tuple[0], rgba_tuple[1], rgba_tuple[2])
                 rect = 1
 
@@ -151,7 +179,7 @@ if __name__ == "__main__":
 
     print("used {0} rectangles".format(rectangle_num))
     print("found {0} colors".format(len(rectangles)))
-    print("Saving SVG to '{0}'".format(svgdoc.filename))
+    print("save {0}".format(svgdoc.filename))
 
     layer_num = 0
     for rgba_tuple in rectangles:

@@ -1,2 +1,2 @@
-- combine rectangles vertical
 - implement similar_color
+- map RGB values to color names
