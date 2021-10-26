@@ -40,9 +40,16 @@ ALPHA = 3
 
 class BreakEx(Exception): pass
 
-# TODO: better similarity comparison
-def similar_color(a, b):
-    return a == b
+# compare two RGB colors @p a and @p b for similarity.
+# the @p sensitivity parameter configures how sensitive the color comparison is.
+# larger values for @p sensitivity will make the comparison less sensitive.
+def similar_color(a, b, sensitivity):
+    if a == b:
+        return True
+    r = (a[RED]   - b[RED])   ** 2
+    g = (a[GREEN] - b[GREEN]) ** 2
+    b = (a[BLUE]  - b[BLUE])  ** 2
+    return r+g+b < sensitivity
 
 # SVG color keywords
 # https://www.w3.org/TR/SVG11/types.html#ColorKeywords
@@ -233,6 +240,11 @@ if __name__ == "__main__":
                                  action="store_true",
                                  help="If given, combine similar pixels into larger rectangles")
 
+    argument_parser.add_argument("--similar",
+                                 type=int,
+                                 default=0,
+                                 help="Configure a numeric value to find a similar color. Larger values make the comparison less sensitive.")
+
     arguments = argument_parser.parse_args()
 
     print("pixel2svg {0}".format(VERSION))
@@ -287,7 +299,7 @@ if __name__ == "__main__":
                 if arguments.combine:
                     while X+x < width:
                         px = rgb_values[Y * width + X + x]
-                        if not similar_color(px, rgba_tuple):
+                        if not similar_color(px, rgba_tuple, arguments.similar):
                             break
                         x += 1
                     if x > 1:
@@ -298,7 +310,7 @@ if __name__ == "__main__":
                                 i = 0
                                 while i < x:
                                     px = rgb_values[(Y+y) * width + X + i]
-                                    if not similar_color(px, rgba_tuple):
+                                    if not similar_color(px, rgba_tuple, arguments.similar):
                                         raise BreakEx
                                     i += 1
                                 # the color is similar.
@@ -315,7 +327,7 @@ if __name__ == "__main__":
 
                         except BreakEx:
                             pass
-                        print("combine: {0},{1} {2},{3}".format(X,Y,x,y))
+                        #print("combine: {0},{1} {2},{3}".format(X,Y,x,y))
 
                 rectangle_num += 1
                 rectangle_posn = ("{0}px".format(X * arguments.squaresize),
@@ -343,14 +355,16 @@ if __name__ == "__main__":
 
     print("used {0} rectangles".format(rectangle_num))
     print("found {0} colors".format(len(rectangles)))
-    print("save {0}".format(svgdoc.filename))
 
     layer_num = 0
     for rgba_tuple in rectangles:
-        layer = inkscape.layer(label=color_name(rgba_tuple), locked=True)
+        name = color_name(rgba_tuple)
+        print("  "+name+" for "+str(rgba_tuple))
+        layer = inkscape.layer(label=name, locked=True)
         svgdoc.add(layer)
         for rect in rectangles[rgba_tuple]:
             layer.add(rect)
 
+    print("save {0}".format(svgdoc.filename))
     svgdoc.save()
     sys.exit(0)
