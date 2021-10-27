@@ -216,25 +216,31 @@ def color_name(c):
 
 
 if __name__ == "__main__":
-
     argument_parser = argparse.ArgumentParser(description="Convert pixel art to SVG")
 
     argument_parser.add_argument("imagefile",
                                  help="The image file to convert")
-
-    argument_parser.add_argument("--overlap",
-                                 action="store_true",
-                                 help="If given, overlap vector squares by 1px")
 
     argument_parser.add_argument("--version",
                                  action="version",
                                  version=VERSION,
                                  help="Display the program version")
 
+    argument_parser.add_argument("--overlap",
+                                 action="store_true",
+                                 help="If given, overlap vector squares by 1 unit")
+
     argument_parser.add_argument("--squaresize",
                                  type=int,
                                  default=40,
                                  help="Width and height of vector squares in pixels, default: 40")
+
+    # https://www.w3.org/TR/SVG2/coords.html#Units
+    # https://www.w3.org/TR/css-values-3/#length-value
+    argument_parser.add_argument("--unit",
+                                 default='px',
+                                 choices=['em','ex','cm','mm','Q','in','pc','pt','px'],
+                                 help="set SVG unit used with --squaresize, default: px")
 
     argument_parser.add_argument("--combine",
                                  action="store_true",
@@ -246,6 +252,7 @@ if __name__ == "__main__":
                                  help="Configure a numeric value to find a similar color. Larger values make the comparison less sensitive.")
 
     arguments = argument_parser.parse_args()
+    unit = arguments.unit
 
     print("pixel2svg {0}".format(VERSION))
     print("read: {0}".format(arguments.imagefile))
@@ -255,14 +262,15 @@ if __name__ == "__main__":
 
     (width, height) = image.size
 
-    print("image size: {0}x{1}".format(width, height))
+    print("input image size: {0}x{1} px".format(width, height))
+    print("  SVG image size: {0}x{1} {2}".format(width * arguments.squaresize, height * arguments.squaresize, unit))
 
     rgb_values = list(image.getdata())
 
     svg_filename = os.path.splitext(arguments.imagefile)[0] + ".svg"
     svgdoc = svgwrite.Drawing(filename=svg_filename,
-                              size=("{0}px".format(width * arguments.squaresize),
-                                    "{0}px".format(height * arguments.squaresize)))
+                              size=(str(width * arguments.squaresize)+unit,
+                                    str(height * arguments.squaresize)+unit))
     inkscape = Inkscape(svgdoc)
 
     # If --overlap is given, use a slight overlap to prevent inaccurate SVG rendering
@@ -271,7 +279,7 @@ if __name__ == "__main__":
         overlap = 1
     else:
         overlap = 0
-    print("overlap: {0}px".format(overlap))
+    print("overlap: {0} {1}".format(overlap, unit))
 
     # a dictionary of rectangles
     # key: rgba tuple
@@ -331,10 +339,10 @@ if __name__ == "__main__":
                         #print("combine: {0},{1} {2},{3}".format(X,Y,x,y))
 
                 rectangle_num += 1
-                rectangle_posn = ("{0}px".format(X * arguments.squaresize),
-                                  "{0}px".format(Y * arguments.squaresize))
-                rectangle_size = ("{0}px".format(x * arguments.squaresize + overlap),
-                                  "{0}px".format(y * arguments.squaresize + overlap))
+                rectangle_posn = (str(X * arguments.squaresize)+unit,
+                                  str(Y * arguments.squaresize)+unit)
+                rectangle_size = (str(x * arguments.squaresize + overlap)+unit,
+                                  str(y * arguments.squaresize + overlap)+unit)
                 rectangle_fill = svgwrite.rgb(rgba_tuple[0], rgba_tuple[1], rgba_tuple[2])
                 rect = 1
 
@@ -366,7 +374,7 @@ if __name__ == "__main__":
         for rect in rectangles[rgba_tuple]:
             layer.add(rect)
 
-    print("save {0}".format(svgdoc.filename))
+    print("write: {0}".format(svgdoc.filename))
     svgdoc.save(pretty=True)
 
     f = open(svg_filename, 'a')
