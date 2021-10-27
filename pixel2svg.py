@@ -259,7 +259,8 @@ if __name__ == "__main__":
 
     rgb_values = list(image.getdata())
 
-    svgdoc = svgwrite.Drawing(filename=os.path.splitext(arguments.imagefile)[0] + ".svg",
+    svg_filename = os.path.splitext(arguments.imagefile)[0] + ".svg"
+    svgdoc = svgwrite.Drawing(filename=svg_filename,
                               size=("{0}px".format(width * arguments.squaresize),
                                     "{0}px".format(height * arguments.squaresize)))
     inkscape = Inkscape(svgdoc)
@@ -366,5 +367,12 @@ if __name__ == "__main__":
             layer.add(rect)
 
     print("save {0}".format(svgdoc.filename))
-    svgdoc.save()
+    svgdoc.save(pretty=True)
+
+    f = open(svg_filename, 'a')
+    f.writelines([
+        "<!-- created by pixel2svg.py -->\n",
+        "<!-- https://github.com/doj/pixel2svg-fork -->\n",
+        ])
+    f.close()
     sys.exit(0)

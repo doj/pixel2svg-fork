@@ -1,0 +1,1 @@
+- output rectangles in order which minimizes path length
