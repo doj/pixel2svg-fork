@@ -53,23 +53,39 @@ Then install the 2 python libraries with:
 Usage
 -----
 
-    Usage: usage: pixel2svg.py [-h] [--overlap] [--version] [--squaresize SQUARESIZE] [--combineh] imagefile
-
-    Options:
-      --version             show program's version number and exit
+    usage: pixel2svg.py [-h] [--version] [--overlap] [--squaresize SQUARESIZE]
+                        [--unit {em,ex,cm,mm,Q,in,pc,pt,px}] [--combine]
+                        [--similar SIMILAR]
+                        imagefile
+    
+    Convert pixel art to SVG
+    
+    positional arguments:
+      imagefile             The image file to convert
+    
+    optional arguments:
       -h, --help            show this help message and exit
-      --squaresize=SQUARESIZE
-                            Width and heigt of vector squares in pixels, default: 40
-      --overlap             If given, overlap vector squares by 1px
-
+      --version             Display the program version
+      --overlap             If given, overlap vector squares by 1 unit
+      --squaresize SQUARESIZE
+                            Width and height of vector squares in pixels, default:
+                            40
+      --unit {em,ex,cm,mm,Q,in,pc,pt,px}
+                            set SVG unit used with --squaresize, default: px
+      --combine             If given, combine similar pixels into larger
+                            rectangles
+      --similar SIMILAR     Configure a numeric value to find a similar color.
+                            Larger values make the comparison less sensitive.
 Running
 
     pixel2svg.py IMAGE.EXT
 
-will process IMAGE.EXT and create IMAGE.svg.
+will process IMAGE.EXT and create IMAGE.svg
 
-EXT can be any format (png, jpg etc.) that can be read by the Python Imaging
-Library.
+EXT can be any format (png, jpg, bmp, gif and many more) that can be
+read by the Python Imaging Library. See
+https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html
+for details.
 
 
 License
