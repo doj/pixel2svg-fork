@@ -21,7 +21,3 @@ from . import utils  # noqa: F401
 parse = loaders.parse
 load = loaders.load
 read = loaders.read
-
-# legacy
-load_problem = loaders.load_problem
-load_solution = loaders.load_solution

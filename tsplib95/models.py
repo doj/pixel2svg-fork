@@ -2,8 +2,6 @@
 import itertools
 import re
 
-import networkx
-
 from . import fields as F
 from . import matrix
 from . import distances
@@ -515,72 +513,6 @@ class StandardProblem(Problem):
         else:
             # TODO: raise an exception instead
             return None
-
-    def get_graph(self, normalize=False):
-        """Return a networkx graph instance representing the problem.
-
-        The metadata of the problem is associated with the graph itself.
-        Additional problem information is associated with the nodes and edges.
-        For example:
-
-        .. code-block:: python
-
-            >>> G = problem.get_graph()
-            >>> G.graph
-            {'name': None,
-             'comment': '14-Staedte in Burma (Zaw Win)',
-             'type': 'TSP',
-             'dimension': 14,
-             'capacity': None}
-            >>> G.nodes[1]
-            {'coord': (16.47, 96.1),
-             'display': None,
-             'demand': None,
-             'is_depot': False}
-            >>> G.edges[1, 2]
-            {'weight': 2, 'is_fixed': False}
-
-        If the graph is asymmetric then a :class:`networkx.DiGraph` is
-        returned. Optionally, the nodes can be renamed to be sequential and
-        zero-indexed.
-
-        :param bool normalize: rename nodes to be zero-indexed
-        :return: graph
-        :rtype: :class:`networkx.Graph`
-        """
-        # directed graphs are fundamentally different
-        G = networkx.Graph() if self.is_symmetric() else networkx.DiGraph()
-
-        # add basic graph metadata
-        G.graph['name'] = self.name
-        G.graph['comment'] = self.comment
-        G.graph['type'] = self.type
-        G.graph['dimension'] = self.dimension
-        G.graph['capacity'] = self.capacity
-
-        # set up a map from original node name to new node name
-        nodes = list(self.get_nodes())
-        if normalize:
-            names = {n: i for i, n in enumerate(nodes)}
-        else:
-            names = {n: n for n in nodes}
-
-        # add every node with some associated metadata
-        for n in nodes:
-            is_depot = n in self.depots
-            G.add_node(names[n], coord=self.node_coords.get(n),
-                       display=self.display_data.get(n),
-                       demand=self.demands.get(n),
-                       is_depot=is_depot)
-
-        # add every edge with some associated metadata
-        for a, b in self.get_edges():
-            weight = self.get_weight(a, b)
-            is_fixed = (a, b) in self.fixed_edges
-            G.add_edge(names[a], names[b], weight=weight, is_fixed=is_fixed)
-
-        # return the graph object
-        return G
 
     def _create_wfunc(self, special=None):
         # explicit problems ignore the special function
