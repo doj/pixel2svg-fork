@@ -1,0 +1,1 @@
+- output style element for rectangles to inkscape gets the correct color
