@@ -24,11 +24,16 @@
 import argparse
 import sys
 import os.path
+import re
 
 from PIL import Image
 
 import svgwrite
 from svgwrite.extensions import Inkscape
+
+import numpy as np
+from python_tsp.distances import great_circle_distance_matrix
+from python_tsp.heuristics import solve_tsp_simulated_annealing
 
 VERSION = "0.6.0"
 
@@ -214,6 +219,9 @@ def color_name(c):
         min_colors[r + g + b] = name
     return min_colors[min(min_colors.keys())]
 
+# convert a SVG coordinate to a float number
+def svg2float(c):
+    return float(re.sub('[^.\-\d]', '', str(c)))
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser(description="Convert pixel art to SVG")
@@ -251,6 +259,14 @@ if __name__ == "__main__":
                                  default=0,
                                  help="Configure a numeric value to find a similar color. Larger values make the comparison less sensitive.")
 
+    argument_parser.add_argument("--optimize",
+                                 action="store_true",
+                                 help="Optimize the order of SVG rectangles to minimize the path.")
+
+    argument_parser.add_argument("--reverse",
+                                 action="store_true",
+                                 help="Reverse the order of SVG rectangles.")
+
     arguments = argument_parser.parse_args()
     unit = arguments.unit
 
@@ -286,6 +302,7 @@ if __name__ == "__main__":
     # value: list of SVG rectangle objects
     rectangles = {}
 
+    # iterate over all pixels and create SVG rectangles mapped by the pixel's color
     rectangle_num = 0
     Y = 0
     while Y < height:
@@ -365,14 +382,37 @@ if __name__ == "__main__":
     print("used {0} rectangles".format(rectangle_num))
     print("found {0} colors".format(len(rectangles)))
 
+    # output rectangles on a separate layer for each color
     layer_num = 0
     for rgba_tuple in rectangles:
         name = color_name(rgba_tuple)
         print("  "+name+" for "+str(rgba_tuple))
         layer = inkscape.layer(label=name, locked=True)
         svgdoc.add(layer)
-        for rect in rectangles[rgba_tuple]:
-            layer.add(rect)
+
+        if arguments.optimize:
+            # use travelling salesman algorithm to calculate a good path between the rectangles
+
+            # 1st step: create a list with rectangle coordinates
+            coord = []
+            for rect in rectangles[rgba_tuple]:
+                coord.append([svg2float(rect.attribs['x']), svg2float(rect.attribs['y'])])
+            # 2nd step: create a distance matrix from the coordinates
+            distance_matrix = great_circle_distance_matrix(np.array(coord))
+            distance_matrix[:, 0] = 0 # set first column to 0, this will not require a closed path
+            # 3rd step: find a good path
+            permutation, distance = solve_tsp_simulated_annealing(distance_matrix)
+            # 4th step: add SVG rectangles to the layer
+            if arguments.reverse:
+                permutation.reverse()
+            for idx in permutation:
+                layer.add(rectangles[rgba_tuple][idx])
+        else:
+            rect_list = rectangles[rgba_tuple]
+            if arguments.reverse:
+                rect_list.reverse()
+            for rect in rect_list:
+                layer.add(rect)
 
     print("write: {0}".format(svgdoc.filename))
     svgdoc.save(pretty=True)

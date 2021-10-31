@@ -47,7 +47,7 @@ to /etc/portage/package.accept_keywords
 
 Then install the 2 python libraries with:
 
-    emerge dev-python/pillow dev-python/svgwrite
+    emerge dev-python/pillow dev-python/svgwrite dev-python/numpy
 
 
 Usage
