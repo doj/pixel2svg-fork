@@ -386,12 +386,15 @@ if __name__ == "__main__":
     layer_num = 0
     for rgba_tuple in rectangles:
         name = color_name(rgba_tuple)
-        print("  "+name+" for "+str(rgba_tuple))
+        rectangles_num = len(rectangles[rgba_tuple])
+        print("  "+name+" for "+str(rgba_tuple)+" with "+str(rectangles_num)+" rectangles")
         layer = inkscape.layer(label=name, locked=True)
         svgdoc.add(layer)
 
-        if arguments.optimize:
-            # use travelling salesman algorithm to calculate a good path between the rectangles
+        # use travelling salesman algorithm to calculate a good path between the rectangles?
+        # the command line option to optimize the rectangle order needs to be enabled,
+        # and there need to be at least 3 rectangles.
+        if arguments.optimize and rectangles_num > 2:
 
             # 1st step: create a list with rectangle coordinates
             coord = []

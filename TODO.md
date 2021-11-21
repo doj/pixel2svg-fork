@@ -1,1 +1,2 @@
+- combine single pixels downward
 - output style element for rectangles to inkscape gets the correct color
