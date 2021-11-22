@@ -276,17 +276,18 @@ if __name__ == "__main__":
     image = Image.open(arguments.imagefile)
     image = image.convert("RGBA")
 
-    (width, height) = image.size
+    # width and height of the image in pixels
+    (image_width, image_height) = image.size
 
-    print("input image size: {0}x{1} px".format(width, height))
-    print("  SVG image size: {0}x{1} {2}".format(width * arguments.squaresize, height * arguments.squaresize, unit))
+    print("input image size: {0}x{1} px".format(image_width, image_height))
+    print("  SVG image size: {0}x{1} {2}".format(image_width * arguments.squaresize, image_height * arguments.squaresize, unit))
 
     rgb_values = list(image.getdata())
 
     svg_filename = os.path.splitext(arguments.imagefile)[0] + ".svg"
     svgdoc = svgwrite.Drawing(filename=svg_filename,
-                              size=(str(width * arguments.squaresize)+unit,
-                                    str(height * arguments.squaresize)+unit))
+                              size=(str(image_width * arguments.squaresize)+unit,
+                                    str(image_height * arguments.squaresize)+unit))
     inkscape = Inkscape(svgdoc)
 
     # If --overlap is given, use a slight overlap to prevent inaccurate SVG rendering
@@ -304,62 +305,61 @@ if __name__ == "__main__":
 
     # iterate over all pixels and create SVG rectangles mapped by the pixel's color
     rectangle_num = 0
-    Y = 0
-    while Y < height:
+    Y = 0 # Y coordinate of current pixel
+    while Y < image_height:
 
-        #print("Processing pixel row {0} of {1}".format(Y + 1, height))
+        #print("Processing pixel row {0} of {1}".format(Y + 1, image_height))
 
-        X = 0
-        while X < width:
+        X = 0 # X coordinate of current pixel
+        while X < image_width:
 
-            #rgba_tuple = rgb_values.pop(0)
-            rgba_tuple = rgb_values[Y * width + X]
+            rgba_tuple = rgb_values[Y * image_width + X]
 
             # Omit transparent pixels
-            x = 1
+            w = 1 # width of rectangle
             alpha = rgba_tuple[ALPHA]
             if alpha > 0:
-                y = 1
+                h = 1 # height of rectangle
 
-                # combine horizontal pixels?
+                # combine pixels?
                 if arguments.combine:
-                    while X+x < width:
-                        px = rgb_values[Y * width + X + x]
+                    # find pixels with same color horizontally
+                    while X+w < image_width:
+                        px = rgb_values[Y * image_width + X + w]
                         if not similar_color(px, rgba_tuple, arguments.similar):
                             break
-                        x += 1
-                    if x > 1:
-                        # check if pixels below have the same color and can be combined?
-                        try:
-                            while Y+y < height:
-                                # check if the next row of pixels has a similar color
-                                i = 0
-                                while i < x:
-                                    px = rgb_values[(Y+y) * width + X + i]
-                                    if not similar_color(px, rgba_tuple, arguments.similar):
-                                        raise BreakEx
-                                    i += 1
+                        w += 1
+                    # check if pixels below have the same color and can be combined?
+                    try:
+                        while Y+h < image_height:
+                            # check if the next row of pixels has a similar color
+                            i = 0
+                            while i < w:
+                                px = rgb_values[(Y+h) * image_width + X + i]
+                                if not similar_color(px, rgba_tuple, arguments.similar):
+                                    raise BreakEx
+                                i += 1
                                 # the color is similar.
                                 # set the alpha value of all these pixels to 0, so they will not be processed any more.
-                                i = 0
-                                while i < x:
-                                    # the pixel is a python tuple and constant.
-                                    # create a new tuple with alpha=0 and assign to the pixel array.
-                                    px = rgb_values[(Y+y) * width + X + i]
-                                    rgb_values[(Y+y) * width + X + i] = (px[RED], px[GREEN], px[BLUE], 0)
-                                    i += 1
+                            i = 0
+                            while i < w:
+                                # the pixel is a python tuple and constant.
+                                # create a new tuple with alpha=0 and assign to the pixel array.
+                                px = rgb_values[(Y+h) * image_width + X + i]
+                                rgb_values[(Y+h) * image_width + X + i] = (px[RED], px[GREEN], px[BLUE], 0)
+                                i += 1
 
-                                y += 1
+                            h += 1
 
-                        except BreakEx:
-                            pass
-                        #print("combine: {0},{1} {2},{3}".format(X,Y,x,y))
+                    except BreakEx:
+                        pass
+                    #print("combine: {0},{1} {2},{3}".format(X,Y,w,h))
 
                 rectangle_num += 1
                 rectangle_posn = (str(X * arguments.squaresize)+unit,
                                   str(Y * arguments.squaresize)+unit)
-                rectangle_size = (str(x * arguments.squaresize + overlap)+unit,
-                                  str(y * arguments.squaresize + overlap)+unit)
+                rectangle_size = (str(w * arguments.squaresize + overlap)+unit,
+                                  str(h * arguments.squaresize + overlap)+unit)
                 rectangle_fill = svgwrite.rgb(rgba_tuple[0], rgba_tuple[1], rgba_tuple[2])
                 rect = 1
 
@@ -375,7 +375,7 @@ if __name__ == "__main__":
 
                 rectangles.setdefault(rgba_tuple, []).append(rect)
 
-            X += x
+            X += w
 
         Y += 1
 

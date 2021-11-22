@@ -1,2 +1,2 @@
-- combine single pixels downward
+- combine pixels into an arbitrary shape with a polygon
 - output style element for rectangles to inkscape gets the correct color
